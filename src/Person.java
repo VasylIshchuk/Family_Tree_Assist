@@ -4,10 +4,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class Person {
     private String name;
@@ -53,11 +51,23 @@ public class Person {
                 personWithParentsNamesMap.put(person.name,personWithParentsNames);
 
                 person.validateLifespan();
-                person.checkAmbiguousPerson(peopleList);
+                person.validateAmbiguousPerson(peopleList);
 
                 peopleList.add(person);
             }
             PersonWithParentsNames.linkRelatives(personWithParentsNamesMap);
+            try {
+                for(Person person: peopleList)
+                    person.validateParentingAge();
+            } catch (ParentingAgeException e) {
+                Scanner scanner = new Scanner(System.in);
+                System.out.println(e.getMessage());
+                System.out.println("Confirm this case \'Y\' or reject \'N\' :");
+                String response = scanner.next();
+                if(!response.equals("Y") && !response.equals("y") ){
+                    peopleList.remove(e.person);
+                }
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -74,12 +84,20 @@ public class Person {
             throw new NegativeLifespanException(this);
         }
     }
-    public void checkAmbiguousPerson(List<Person> peopleList) throws AmbiguousPersonException {
+    public void validateAmbiguousPerson(List<Person> peopleList) throws AmbiguousPersonException {
         for(Person person : peopleList) {
             if (this.name.equals(person.name)){
                 throw new AmbiguousPersonException(this);
             }
         }
+    }
+    private void validateParentingAge() throws ParentingAgeException {
+        for(Person parent: parents)
+            if(ChronoUnit.YEARS.between(parent.dateBirth,
+                    (parent.dateDeath == null ? LocalDate.now() : parent.dateDeath )) < 15 ||
+                    (parent.dateDeath != null && parent.dateDeath.isBefore(this.dateBirth))){
+                throw new ParentingAgeException(this,parent);
+            }
     }
     @Override
     public String toString() {
