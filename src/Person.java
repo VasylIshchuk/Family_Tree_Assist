@@ -11,6 +11,19 @@ public class Person {
     private String name;
     private LocalDate dateBirth;
     private LocalDate dateDeath;
+
+    public String getName() {
+        return name;
+    }
+
+    public LocalDate getDateBirth() {
+        return dateBirth;
+    }
+
+    public LocalDate getDateDeath() {
+        return dateDeath;
+    }
+
     public static Person fromCsvLine(String csvLine){
         Person person = new Person();
         String[] dataPerson = csvLine.split(",");
@@ -28,14 +41,23 @@ public class Person {
         {
             bufferedReader.readLine();
             while((csvLine = bufferedReader.readLine()) != null) {
-                peopleList.add(fromCsvLine(csvLine));
+                Person person = fromCsvLine(csvLine);
+                person.validateLifespan();
+                peopleList.add(person);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (NegativeLifespanException e) {
+            System.err.println(e.getMessage());
         }
         return peopleList;
+    }
+    public void validateLifespan() throws NegativeLifespanException {
+        if(dateDeath != null && dateDeath.isBefore(dateBirth)){
+            throw new NegativeLifespanException(this);
+        }
     }
 
     @Override
