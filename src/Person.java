@@ -33,6 +33,13 @@ public class Person {
         if(!dataPerson[2].isEmpty())  person.dateDeath = person.dateDeath.parse(dataPerson[2],formatter);
         return person;
     }
+    public void checkAmbiguousPerson(List<Person> peopleList) throws AmbiguousPersonException {
+        for(Person person : peopleList) {
+            if (this.name.equals(person.name)){
+                throw new AmbiguousPersonException(this);
+            }
+        }
+    }
     public static List<Person> fromCsv(String path){
         List<Person> peopleList = new ArrayList<>();
         String csvLine;
@@ -43,6 +50,7 @@ public class Person {
             while((csvLine = bufferedReader.readLine()) != null) {
                 Person person = fromCsvLine(csvLine);
                 person.validateLifespan();
+                person.checkAmbiguousPerson(peopleList);
                 peopleList.add(person);
             }
         } catch (FileNotFoundException e) {
@@ -51,14 +59,17 @@ public class Person {
             e.printStackTrace();
         } catch (NegativeLifespanException e) {
             System.err.println(e.getMessage());
+        } catch (AmbiguousPersonException e) {
+            System.err.println(e.getMessage());
         }
         return peopleList;
     }
     public void validateLifespan() throws NegativeLifespanException {
-        if(dateDeath != null && dateDeath.isBefore(dateBirth)){
+        if(this.dateDeath != null && this.dateDeath.isBefore(this.dateBirth)){
             throw new NegativeLifespanException(this);
         }
     }
+
 
     @Override
     public String toString() {
