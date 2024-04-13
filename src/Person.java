@@ -1,13 +1,10 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class Person {
+public class Person implements  Serializable {
     private String name;
     private LocalDate dateBirth;
     private LocalDate dateDeath;
@@ -62,7 +59,7 @@ public class Person {
             } catch (ParentingAgeException e) {
                 Scanner scanner = new Scanner(System.in);
                 System.out.println(e.getMessage());
-                System.out.println("Confirm this case \'Y\' or reject \'N\' :");
+                System.out.println("Confirm this case 'Y' or reject 'N' :");
                 String response = scanner.next();
                 if(!response.equals("Y") && !response.equals("y") ){
                     peopleList.remove(e.person);
@@ -98,6 +95,21 @@ public class Person {
                     (parent.dateDeath != null && parent.dateDeath.isBefore(this.dateBirth))){
                 throw new ParentingAgeException(this,parent);
             }
+    }
+    public  static void toBinaryFile(List<Person> peopleList,String path){
+        try (FileOutputStream fileOutputStream = new FileOutputStream(path);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
+        {
+            objectOutputStream.writeObject(peopleList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public  static List<Person> fromBinaryFile(String path) throws IOException, ClassNotFoundException {
+        try (FileInputStream fileInputStream = new FileInputStream(path);
+             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+            return (List<Person>) objectInputStream.readObject();
+        }
     }
     @Override
     public String toString() {
