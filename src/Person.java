@@ -150,7 +150,13 @@ public class Person implements  Serializable {
     }
     public static List<Person> filterList(List<Person> peopleList, String substring){
          return peopleList.stream()
-                .filter(str -> str.name.equals(substring))
+                .filter(person -> person.name.equals(substring))
+                .collect(Collectors.toList());
+    }
+    public  static List<Person> sortedList (List<Person> personList){
+        return personList.stream()
+                .sorted(Comparator.comparing(person -> person.dateBirth))
+                //(person1, person2) -> person1.dateBirth.compareTo(person2.dateBirth)
                 .collect(Collectors.toList());
     }
     @Override
