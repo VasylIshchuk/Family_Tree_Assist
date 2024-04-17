@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 
 public class Person implements  Serializable {
     private String name;
@@ -110,6 +111,21 @@ public class Person implements  Serializable {
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (List<Person>) objectInputStream.readObject();
         }
+    }
+    public  String plantUmlWihParents(){
+        StringBuilder stringBuilder = new StringBuilder();
+        Function<String,String> replace = str -> str.replaceAll(" ","");
+        stringBuilder.append("@startuml\n").append("object ").
+                append(replace.apply(name)+"\n");
+
+        for(Person parent : parents){
+            stringBuilder.append("object ").append(replace.apply(parent.name)+"\n");
+        }
+        for(Person parent : parents){
+            stringBuilder.append(replace.apply(name)).append(" --> ").append(replace.apply(parent.name) + "\n");
+        }
+        stringBuilder.append("@enduml");
+        return String.valueOf(stringBuilder);
     }
     @Override
     public String toString() {
