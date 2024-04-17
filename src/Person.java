@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Person implements  Serializable {
     private String name;
@@ -146,6 +147,11 @@ public class Person implements  Serializable {
         return String.format(Locale.ENGLISH,"@startuml\n%s\n%s\n@enduml",
                 String.join("\n",object),
                 String.join("\n",relations));
+    }
+    public static List<Person> filterList(List<Person> peopleList, String substring){
+         return peopleList.stream()
+                .filter(str -> str.name.equals(substring))
+                .collect(Collectors.toList());
     }
     @Override
     public String toString() {
