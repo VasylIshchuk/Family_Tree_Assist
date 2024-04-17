@@ -97,6 +97,7 @@ public class Person implements  Serializable {
                 throw new ParentingAgeException(this,parent);
             }
     }
+
     public  static void toBinaryFile(List<Person> peopleList,String path){
         try (FileOutputStream fileOutputStream = new FileOutputStream(path);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
@@ -112,20 +113,39 @@ public class Person implements  Serializable {
             return (List<Person>) objectInputStream.readObject();
         }
     }
-    public  String plantUmlWihParents(){
-        StringBuilder stringBuilder = new StringBuilder();
-        Function<String,String> replace = str -> str.replaceAll(" ","");
-        stringBuilder.append("@startuml\n").append("object ").
-                append(replace.apply(name)+"\n");
+    public  String toPlantUmlWihParents(){
+        StringBuilder plantUml = new StringBuilder();
+        Function<String,String> replaceWhitespace = str -> str.replaceAll(" ","");
+        plantUml.append("@startuml\n").append("object ").
+                append(replaceWhitespace.apply(name)+"\n");
 
         for(Person parent : parents){
-            stringBuilder.append("object ").append(replace.apply(parent.name)+"\n");
+            plantUml.append("object ").append(replaceWhitespace.apply(parent.name)+"\n");
         }
         for(Person parent : parents){
-            stringBuilder.append(replace.apply(name)).append(" --> ").append(replace.apply(parent.name) + "\n");
+            plantUml.append(replaceWhitespace.apply(name)).append(" --> ").append(replaceWhitespace.apply(parent.name) + "\n");
         }
-        stringBuilder.append("@enduml");
-        return String.valueOf(stringBuilder);
+        plantUml.append("@enduml");
+        return String.valueOf(plantUml);
+    }
+    public static String toPlantUmlPeople(List<Person> peopleList){
+        Set<String> object = new HashSet<>();
+        Set<String> relations= new HashSet<>();
+
+        Function<String,String> replaceWhitespace =
+                str -> str.replaceAll(" ","");
+
+        for(Person person : peopleList){
+            object.add("object " + replaceWhitespace.apply(person.name));
+            for(Person parent : person.parents){
+                object.add("object " + replaceWhitespace.apply(parent.name));
+                relations.add(replaceWhitespace.apply(person.name) +
+                        " --> " + replaceWhitespace.apply(parent.name));
+            }
+        }
+        return String.format(Locale.ENGLISH,"@startuml\n%s\n%s\n@enduml",
+                String.join("\n",object),
+                String.join("\n",relations));
     }
     @Override
     public String toString() {
