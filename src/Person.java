@@ -155,25 +155,31 @@ public class Person implements  Serializable {
                 String.join("\n",object),
                 String.join("\n",relations));
     }
-    public static List<Person> filterList(List<Person> peopleList, String substring){
+    public static List<Person> filterListBySubstring(List<Person> peopleList, String substring){
          return peopleList.stream()
                 .filter(person -> person.name.equals(substring))
                 .collect(Collectors.toList());
     }
-    public  static List<Person> sortedListToDateBirth (List<Person> personList){
+    public  static List<Person> sortedListByDateBirth (List<Person> personList){
         return personList.stream()
                 .sorted(Comparator.comparing(person -> person.dateBirth))
-                //(person1, person2) -> person1.dateBirth.compareTo(person2.dateBirth)
+                //(person1, person2) -> person1.dateBirth.compareTo(person2.dateBirth) sorted in increasing order
                 .collect(Collectors.toList());
     }
-    public  static List<Person> sortedListToDateDeath(List<Person> personList){
+    public  static List<Person> sortedListByDateDeath(List<Person> personList){
         return personList.stream()
-                .filter(person ->person.dateDeath !=null)
-                .sorted((person1,person2) -> person2.dateDeath.compareTo(person1.dateDeath))
+                .filter(person -> person.dateDeath != null)
+                .sorted((person1,person2) -> person2.dateDeath.compareTo(person1.dateDeath))//sorted in descending order
                 .collect(Collectors.toList());
-
     }
-    public static Optional<Person> olderLifePerson (List<Person> personList){
+    public static List<Person> sortedDeadPersonByAge(List<Person> personList){
+        return  personList.stream()
+                .filter(person -> person.dateDeath != null)
+                .sorted(Comparator.comparing(
+                        person -> ChronoUnit.YEARS.between(person.dateBirth,person.dateDeath)))
+                .collect(Collectors.toList());
+    }
+    public static Optional<Person> olderLivePerson (List<Person> personList){
         return  personList.stream()
                 .filter(person ->person.dateDeath !=null)
                 .max(Comparator.comparing(person ->

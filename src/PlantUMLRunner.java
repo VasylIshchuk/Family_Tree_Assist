@@ -23,9 +23,7 @@ public class PlantUMLRunner {
              //processBuilder.command("java", "-jar", pathJarUml, filepath);
              Process process = processBuilder.start();
              process.waitFor();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
