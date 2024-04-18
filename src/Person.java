@@ -32,7 +32,9 @@ public class Person implements  Serializable {
         Person person = new Person();
         person.name = dataPerson[0];
         person.dateBirth = person.dateBirth.parse(dataPerson[1],formatter);
-        if(!dataPerson[2].isEmpty())  person.dateDeath = person.dateDeath.parse(dataPerson[2],formatter);
+        if(!dataPerson[2].isEmpty())
+            person.dateDeath = person.dateDeath.parse(dataPerson[2],formatter);
+        else  person.dateDeath = null;
         return person;
     }
 
@@ -45,7 +47,8 @@ public class Person implements  Serializable {
         {
             bufferedReader.readLine();
             while((csvLine = bufferedReader.readLine()) != null) {
-                PersonWithParentsNames personWithParentsNames = PersonWithParentsNames.fromCsvLine(csvLine);
+                PersonWithParentsNames personWithParentsNames =
+                        PersonWithParentsNames.fromCsvLine(csvLine);
                 Person person = personWithParentsNames.getPerson();
                 personWithParentsNamesMap.put(person.name,personWithParentsNames);
 
@@ -83,7 +86,8 @@ public class Person implements  Serializable {
             throw new NegativeLifespanException(this);
         }
     }
-    public void validateAmbiguousPerson(List<Person> peopleList) throws AmbiguousPersonException {
+    public void validateAmbiguousPerson(List<Person> peopleList)
+            throws AmbiguousPersonException {
         for(Person person : peopleList) {
             if (this.name.equals(person.name)){
                 throw new AmbiguousPersonException(this);
@@ -108,7 +112,8 @@ public class Person implements  Serializable {
             e.printStackTrace();
         }
     }
-    public  static List<Person> fromBinaryFile(String path) throws IOException, ClassNotFoundException {
+    public  static List<Person> fromBinaryFile(String path)
+            throws IOException, ClassNotFoundException {
         try (FileInputStream fileInputStream = new FileInputStream(path);
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (List<Person>) objectInputStream.readObject();
@@ -116,7 +121,8 @@ public class Person implements  Serializable {
     }
     public  String toPlantUmlWihParents(){
         StringBuilder plantUml = new StringBuilder();
-        Function<String,String> replaceWhitespace = str -> str.replaceAll(" ","");
+        Function<String,String> replaceWhitespace =
+                str -> str.replaceAll(" ","");
         plantUml.append("@startuml\n").append("object ").
                 append(replaceWhitespace.apply(name)+"\n");
 
@@ -124,7 +130,8 @@ public class Person implements  Serializable {
             plantUml.append("object ").append(replaceWhitespace.apply(parent.name)+"\n");
         }
         for(Person parent : parents){
-            plantUml.append(replaceWhitespace.apply(name)).append(" --> ").append(replaceWhitespace.apply(parent.name) + "\n");
+            plantUml.append(replaceWhitespace.apply(name))
+                    .append(" --> ").append(replaceWhitespace.apply(parent.name) + "\n");
         }
         plantUml.append("@enduml");
         return String.valueOf(plantUml);
@@ -153,12 +160,20 @@ public class Person implements  Serializable {
                 .filter(person -> person.name.equals(substring))
                 .collect(Collectors.toList());
     }
-    public  static List<Person> sortedList (List<Person> personList){
+    public  static List<Person> sortedListToDateBirth (List<Person> personList){
         return personList.stream()
                 .sorted(Comparator.comparing(person -> person.dateBirth))
                 //(person1, person2) -> person1.dateBirth.compareTo(person2.dateBirth)
                 .collect(Collectors.toList());
     }
+    public  static List<Person> sortedListToDateDeath(List<Person> personList){
+        return personList.stream()
+                .filter(person ->person.dateDeath !=null)
+                .sorted((person1,person2) -> person2.dateDeath.compareTo(person1.dateDeath))
+                .collect(Collectors.toList());
+
+    }
+
     @Override
     public String toString() {
         return "Person { " +
@@ -166,6 +181,6 @@ public class Person implements  Serializable {
                 ", birthDate = " + dateBirth +
                 ", deathDate = " + dateDeath +
                 ", parents=" + parents +
-                " }";
+                " }" ;
     }
 }
