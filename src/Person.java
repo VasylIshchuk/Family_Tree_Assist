@@ -173,7 +173,12 @@ public class Person implements  Serializable {
                 .collect(Collectors.toList());
 
     }
-
+    public static Optional<Person> olderLifePerson (List<Person> personList){
+        return  personList.stream()
+                .filter(person ->person.dateDeath !=null)
+                .max(Comparator.comparing(person ->
+                        (int) ChronoUnit.YEARS.between(person.dateBirth,person.dateDeath)));
+    }
     @Override
     public String toString() {
         return "Person { " +
