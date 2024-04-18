@@ -10,7 +10,7 @@ public class PlantUMLRunner {
     public static void generateDiagram(String data, String path, String fileName)  {
         File catalog = new File(path);
         catalog.mkdirs();
-        String filepath = catalog.getPath() +'/'+ fileName;
+        String filepath = catalog.getPath() +'/'+ fileName + ".txt";
 
         try (FileWriter fileWriter = new FileWriter(filepath);
              BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)){

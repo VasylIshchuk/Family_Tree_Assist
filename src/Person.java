@@ -119,15 +119,18 @@ public class Person implements  Serializable {
             return (List<Person>) objectInputStream.readObject();
         }
     }
-    public  String toPlantUmlWihParents(){
+    public String toPlantUmlWihParents(Function<String, String> postProcess){
         StringBuilder plantUml = new StringBuilder();
         Function<String,String> replaceWhitespace =
                 str -> str.replaceAll(" ","");
-        plantUml.append("@startuml\n").append("object ").
-                append(replaceWhitespace.apply(name)+"\n");
+        plantUml.append("@startuml\n")
+                .append("object ")
+                .append(replaceWhitespace.apply(name))
+                .append(" " + postProcess.apply("") + "\n");
 
         for(Person parent : parents){
-            plantUml.append("object ").append(replaceWhitespace.apply(parent.name)+"\n");
+            plantUml.append("object ")
+                    .append(replaceWhitespace.apply(parent.name)+"\n");
         }
         for(Person parent : parents){
             plantUml.append(replaceWhitespace.apply(name))
