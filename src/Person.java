@@ -3,6 +3,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Person implements  Serializable {
     private String name;
@@ -30,7 +33,9 @@ public class Person implements  Serializable {
         Person person = new Person();
         person.name = dataPerson[0];
         person.dateBirth = person.dateBirth.parse(dataPerson[1],formatter);
-        if(!dataPerson[2].isEmpty())  person.dateDeath = person.dateDeath.parse(dataPerson[2],formatter);
+        if(!dataPerson[2].isEmpty())
+            person.dateDeath = person.dateDeath.parse(dataPerson[2],formatter);
+        else  person.dateDeath = null;
         return person;
     }
 
@@ -43,7 +48,8 @@ public class Person implements  Serializable {
         {
             bufferedReader.readLine();
             while((csvLine = bufferedReader.readLine()) != null) {
-                PersonWithParentsNames personWithParentsNames = PersonWithParentsNames.fromCsvLine(csvLine);
+                PersonWithParentsNames personWithParentsNames =
+                        PersonWithParentsNames.fromCsvLine(csvLine);
                 Person person = personWithParentsNames.getPerson();
                 personWithParentsNamesMap.put(person.name,personWithParentsNames);
 
@@ -81,7 +87,8 @@ public class Person implements  Serializable {
             throw new NegativeLifespanException(this);
         }
     }
-    public void validateAmbiguousPerson(List<Person> peopleList) throws AmbiguousPersonException {
+    public void validateAmbiguousPerson(List<Person> peopleList)
+            throws AmbiguousPersonException {
         for(Person person : peopleList) {
             if (this.name.equals(person.name)){
                 throw new AmbiguousPersonException(this);
@@ -96,6 +103,7 @@ public class Person implements  Serializable {
                 throw new ParentingAgeException(this,parent);
             }
     }
+
     public  static void toBinaryFile(List<Person> peopleList,String path){
         try (FileOutputStream fileOutputStream = new FileOutputStream(path);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream))
@@ -105,11 +113,82 @@ public class Person implements  Serializable {
             e.printStackTrace();
         }
     }
-    public  static List<Person> fromBinaryFile(String path) throws IOException, ClassNotFoundException {
+    public  static List<Person> fromBinaryFile(String path)
+            throws IOException, ClassNotFoundException {
         try (FileInputStream fileInputStream = new FileInputStream(path);
              ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             return (List<Person>) objectInputStream.readObject();
         }
+    }
+    public String toPlantUmlWihParents(
+            Function<String, String> postProcess, Predicate<Person> condition){
+        StringBuilder plantUml = new StringBuilder();
+        Function<String,String> replaceWhitespace =
+                str -> str.replaceAll(" ","");
+        plantUml.append("@startuml\n")
+                .append("object ")
+                .append(replaceWhitespace.apply(name) );
+        if(condition.test(this)) plantUml.append(" " + postProcess.apply(""));
+        plantUml.append("\n");
+        for(Person parent : parents){
+            plantUml.append("object ")
+                    .append(replaceWhitespace.apply(parent.name)+"\n");
+        }
+        for(Person parent : parents){
+            plantUml.append(replaceWhitespace.apply(name))
+                    .append(" --> ").append(replaceWhitespace.apply(parent.name) + "\n");
+        }
+        plantUml.append("@enduml");
+        return String.valueOf(plantUml);
+    }
+    public static String toPlantUmlPeople(List<Person> peopleList){
+        Set<String> object = new HashSet<>();
+        Set<String> relations= new HashSet<>();
+
+        Function<String,String> replaceWhitespace =
+                str -> str.replaceAll(" ","");
+
+        for(Person person : peopleList){
+            object.add("object " + replaceWhitespace.apply(person.name));
+            for(Person parent : person.parents){
+                object.add("object " + replaceWhitespace.apply(parent.name));
+                relations.add(replaceWhitespace.apply(person.name) +
+                        " --> " + replaceWhitespace.apply(parent.name));
+            }
+        }
+        return String.format(Locale.ENGLISH,"@startuml\n%s\n%s\n@enduml",
+                String.join("\n",object),
+                String.join("\n",relations));
+    }
+    public static List<Person> filterListBySubstring(List<Person> peopleList, String substring){
+         return peopleList.stream()
+                .filter(person -> person.name.equals(substring))
+                .collect(Collectors.toList());
+    }
+    public  static List<Person> sortedListByDateBirth (List<Person> personList){
+        return personList.stream()
+                .sorted(Comparator.comparing(person -> person.dateBirth))
+                //(person1, person2) -> person1.dateBirth.compareTo(person2.dateBirth) sorted in increasing order
+                .collect(Collectors.toList());
+    }
+    public  static List<Person> sortedListByDateDeath(List<Person> personList){
+        return personList.stream()
+                .filter(person -> person.dateDeath != null)
+                .sorted((person1,person2) -> person2.dateDeath.compareTo(person1.dateDeath))//sorted in descending order
+                .collect(Collectors.toList());
+    }
+    public static List<Person> sortedDeadPersonByAge(List<Person> personList){
+        return  personList.stream()
+                .filter(person -> person.dateDeath != null)
+                .sorted(Comparator.comparing(
+                        person -> ChronoUnit.YEARS.between(person.dateBirth,person.dateDeath)))
+                .collect(Collectors.toList());
+    }
+    public static Optional<Person> olderLivePerson (List<Person> personList){
+        return  personList.stream()
+                .filter(person ->person.dateDeath !=null)
+                .max(Comparator.comparing(person ->
+                        (int) ChronoUnit.YEARS.between(person.dateBirth,person.dateDeath)));
     }
     @Override
     public String toString() {
@@ -118,6 +197,6 @@ public class Person implements  Serializable {
                 ", birthDate = " + dateBirth +
                 ", deathDate = " + dateDeath +
                 ", parents=" + parents +
-                " }";
+                " }" ;
     }
 }
